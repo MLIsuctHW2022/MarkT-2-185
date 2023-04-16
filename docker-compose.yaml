@@ -1,0 +1,43 @@
+version: "3.7"
+
+services:
+    kafka:
+        restart: always
+        image: moeenz/docker-kafka-kraft:latest
+        environment:
+            - KRAFT_CONTAINER_HOST_NAME=kafka
+            - KRAFT_CREATE_TOPICS=mltopic,predicted
+            - KRAFT_PARTITIONS_PER_TOPIC=3
+        ports:
+            - 9093:9093
+
+    ui:
+        restart: always
+        image: provectuslabs/kafka-ui:v0.4.0
+        environment:
+            - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka:9092
+            - KAFKA_CLUSTERS_0_NAME=mlcluster
+        ports:
+            - 8080:8080
+
+    producer:
+        restart: always
+        image: lab2
+        build:
+            dockerfile: Dockerfile
+        environment:
+            - KAFKA_SERVERS=kafka:9092
+            - KAFKA_TOPIC_DATA=mltopic
+            - KAFKA_TOPIC_PREDIDCITONS=predicted
+        command: python producer.py
+
+    consumer:
+        restart: always
+        image: lab2
+        build:
+            dockerfile: Dockerfile
+        environment:
+            - KAFKA_SERVERS=kafka:9092
+            - KAFKA_TOPIC_DATA=mltopic
+            - KAFKA_TOPIC_PREDIDCITONS=predicted
+        command: python consumer.py
